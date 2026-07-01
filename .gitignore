@@ -1,0 +1,58 @@
+# Build outputs
+build/
+build-*/
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+*.o
+*.obj
+*.exe
+
+# IDE/user-local files
+.vscode/
+.idea/
+*.pro.user*
+*.user
+*.suo
+
+# Runtime caches and logs
+cache/
+logs/
+*.log
+*.tmp
+*.bak
+
+# Local environment and credentials
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*
+secret*
+token*
+
+# Runtime media captured on device
+desktop/photos/IMG_*.jpg
+desktop/photos/IMG_*.jpeg
+desktop/videos/
+*.h264
+*.hevc
+*.yuv
+
+# Local model/server runtime artifacts
+llama.cpp/
+*.gguf.tmp
+# Large runtime assets not committed to GitHub
+models/**/*.gguf
+models/**/*.onnx
+desktop/music/*.flac
+desktop/music/*.mp3
+desktop/music/*.wav
+desktop/music/*.m4a
+desktop/music/*.aac
+
+# Locally built ZLMediaKit binaries
+src/edge_media_pipeline/lib/*.so
+src/edge_media_pipeline/lib/*.a

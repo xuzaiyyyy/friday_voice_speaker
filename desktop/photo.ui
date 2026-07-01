@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>photo</class>
+ <widget class="QWidget" name="photo">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1024</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">/* =========================================
+   1. 全局设置
+   ========================================= */
+QWidget {
+    /* 默认字体 */
+    font-family: &quot;Microsoft YaHei&quot;;
+}
+
+/* =========================================
+   2. 左侧菜单栏 (Sidebar) - 制造“阴影感”
+   ========================================= */
+#list_menu {
+    /* 【关键】背景设为浅灰色，与右边的白色区分开 */
+    background-color: #F2F2F7; 
+
+    /* 【关键】右边加一条深灰色的线，这是制造“层级感”的核心 */
+    border: none;
+    border-right: 1px solid #D1D1D6; 
+    
+    /* 去掉选中时的虚线框 */
+    outline: none;
+    
+    /* 让列表内容不要贴顶，留点呼吸感 */
+    padding-top: 20px;
+}
+
+/* 侧边栏的每一个选项 (未选中) */
+#list_menu::item {
+    height: 50px;            /* 每一行的高度 */
+    color: #484848;          /* 文字深灰 */
+    margin: 5px 15px;        /* 【关键】左右留出空隙，让选项像悬浮的按钮 */
+    border-radius: 8px;      /* 圆角 */
+    border: none;
+}
+
+/* 侧边栏选项 (鼠标悬停) */
+#list_menu::item:hover {
+    background-color: rgba(0, 0, 0, 10); /* 微微变暗 */
+}
+
+/* 侧边栏选项 (被选中) - 仿 iPad 选中效果 */
+#list_menu::item:selected {
+    /* 选中变为纯白色，对比背景的灰色，瞬间就有了“浮起来”的感觉 */
+    background-color: #FFFFFF; 
+    
+    /* 文字变蓝 */
+    color: #007AFF; 
+    
+    /* 左侧不需要那种传统的蓝色大色块了，这样更高级 */
+}
+
+/* =========================================
+   3. 右侧照片墙 (Content) - 纯净风格
+   ========================================= */
+#list_photos {
+    /* 右侧纯白背景，突出照片 */
+    background-color: #FFFFFF;
+    
+    /* 去掉边框 */
+    border: none;
+    
+    /* 给内容留点边距 */
+    padding: 20px;
+}
+
+/* 照片墙的每一项 */
+#list_photos::item {
+    /* 稍微加点边距 */
+    margin: 5px;
+}
+
+/* 照片被选中时 */
+#list_photos::item:selected {
+    background-color: #F0F8FF; /* 极淡的蓝色背景 */
+    border: 2px solid #007AFF; /* 蓝色边框 */
+    border-radius: 10px;
+    color: #333333;
+}</string>
+  </property>
+  <widget class="QListWidget" name="list_menu">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>200</width>
+     <height>600</height>
+    </rect>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::NoFrame</enum>
+   </property>
+   <item>
+    <property name="text">
+     <string>照片</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>视频</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QListWidget" name="list_photos">
+   <property name="geometry">
+    <rect>
+     <x>200</x>
+     <y>0</y>
+     <width>824</width>
+     <height>600</height>
+    </rect>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::NoFrame</enum>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>150</width>
+     <height>150</height>
+    </size>
+   </property>
+   <property name="movement">
+    <enum>QListView::Static</enum>
+   </property>
+   <property name="resizeMode">
+    <enum>QListView::Adjust</enum>
+   </property>
+   <property name="spacing">
+    <number>10</number>
+   </property>
+   <property name="viewMode">
+    <enum>QListView::IconMode</enum>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="photo_back">
+   <property name="geometry">
+    <rect>
+     <x>970</x>
+     <y>540</y>
+     <width>50</width>
+     <height>50</height>
+    </rect>
+   </property>
+   <property name="focusPolicy">
+    <enum>Qt::NoFocus</enum>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton {
+background-image: url(:/images/back.svg);
+background-repeat: no-repeat;
+ background-position: center;
+background-color: transparent;
+}</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="photo_back_2">
+   <property name="geometry">
+    <rect>
+     <x>970</x>
+     <y>470</y>
+     <width>50</width>
+     <height>50</height>
+    </rect>
+   </property>
+   <property name="focusPolicy">
+    <enum>Qt::NoFocus</enum>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton {
+background-image: url(:/pic/delete.png);
+background-repeat: no-repeat;
+ background-position: center;
+background-color: transparent;
+}</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

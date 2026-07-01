@@ -1,0 +1,349 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>双链路 WebRTC 播放控制台</title>
+  <style>
+    :root {
+      --bg: #eef3ea;
+      --panel: rgba(255, 255, 255, 0.88);
+      --line: rgba(32, 49, 36, 0.12);
+      --text: #1f2d20;
+      --muted: #5e705e;
+      --accent: #1f7a52;
+      --accent-strong: #145439;
+      --accent-soft: #d9efe3;
+      --danger: #b64747;
+      --shadow: 0 18px 60px rgba(37, 61, 40, 0.10);
+      --radius: 22px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(111, 176, 128, 0.24), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(29, 122, 82, 0.18), transparent 28%),
+        linear-gradient(135deg, #f4f8f1 0%, #ebf2ec 45%, #e5efe5 100%);
+      padding: 28px;
+    }
+    .shell { max-width: 1360px; margin: 0 auto; display: grid; gap: 22px; }
+    .hero, .controls, .stage, .log-panel {
+      background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+      box-shadow: var(--shadow); backdrop-filter: blur(10px);
+    }
+    .hero { display: grid; gap: 16px; padding: 28px; }
+    .hero-title { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+    .hero h1 { margin:0; font-size:clamp(28px,3vw,42px); line-height:1.08; letter-spacing:-0.04em; }
+    .hero p { margin:0; max-width:900px; color:var(--muted); line-height:1.7; font-size:15px; }
+    .tag { display:inline-flex; align-items:center; gap:8px; border-radius:999px; padding:9px 14px; background:var(--accent-soft); color:var(--accent-strong); font-size:13px; font-weight:700; }
+    .controls { display:grid; grid-template-columns:1.4fr 1fr; gap:22px; padding:24px; }
+    .panel, .field { display:grid; gap:16px; }
+    .section-title { margin:0; font-size:15px; font-weight:700; color:var(--accent-strong); }
+    .switches, .action-row, .status-grid { display:flex; gap:12px; flex-wrap:wrap; }
+    button, input { font:inherit; }
+    button { border:0; border-radius:14px; padding:12px 16px; cursor:pointer; transition:transform .16s ease, box-shadow .16s ease, background .16s ease; }
+    button:hover { transform:translateY(-1px); }
+    .switch-btn, .secondary-btn { background:#f6faf6; border:1px solid var(--line); color:var(--text); box-shadow:inset 0 1px 0 rgba(255,255,255,.8); }
+    .switch-btn.active { background:linear-gradient(135deg, #1f7a52 0%, #279461 100%); color:#fff; box-shadow:0 12px 28px rgba(31,122,82,.24); }
+    .primary-btn { background:linear-gradient(135deg, #1f7a52 0%, #2a9b68 100%); color:#fff; box-shadow:0 14px 32px rgba(31,122,82,.22); }
+    .danger-btn { background:linear-gradient(135deg, #9f4646 0%, #c85656 100%); color:#fff; box-shadow:0 14px 32px rgba(161,71,71,.20); }
+    .toggle-btn.on { background:linear-gradient(135deg, #cf8a1a 0%, #e3aa45 100%); color:#fff; box-shadow:0 12px 28px rgba(214,149,41,.24); }
+    .field label { font-size:13px; font-weight:700; color:var(--muted); }
+    input { width:100%; border-radius:14px; border:1px solid var(--line); background:rgba(255,255,255,.92); padding:14px 16px; outline:none; color:var(--text); }
+    input:focus { border-color:rgba(31,122,82,.42); box-shadow:0 0 0 4px rgba(31,122,82,.10); }
+    .hint { color:var(--muted); font-size:13px; line-height:1.65; }
+    .status-card { min-width:132px; padding:14px; border-radius:16px; background:#f7fbf6; border:1px solid var(--line); }
+    .status-card .label { display:block; font-size:12px; color:var(--muted); margin-bottom:6px; }
+    .status-card .value { font-size:17px; font-weight:700; }
+    .stage { display:grid; grid-template-columns:1.65fr .95fr; gap:22px; padding:24px; align-items:start; }
+    .video-shell { position:relative; overflow:hidden; border-radius:20px; border:1px solid var(--line); background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02)), linear-gradient(135deg, #18231c 0%, #101712 100%); min-height:520px; }
+    video { width:100%; height:100%; min-height:520px; display:block; background:transparent; object-fit:contain; }
+    .video-overlay { position:absolute; inset:0; pointer-events:none; display:flex; flex-direction:column; justify-content:space-between; padding:18px; }
+    .pill { align-self:flex-start; border-radius:999px; padding:8px 12px; background:rgba(8,14,10,.56); color:#f3f7f2; font-size:12px; border:1px solid rgba(255,255,255,.10); backdrop-filter:blur(8px); }
+    .side-box { display:grid; gap:18px; }
+    .side-card { border-radius:18px; padding:18px; border:1px solid var(--line); background:#f8fbf7; }
+    .side-card h3 { margin:0 0 10px; font-size:15px; }
+    .side-card ul { margin:0; padding-left:18px; color:var(--muted); line-height:1.75; font-size:13px; }
+    .log-panel { padding:22px; }
+    .log-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:12px; }
+    pre { margin:0; min-height:180px; max-height:360px; overflow:auto; border-radius:18px; border:1px solid rgba(17,30,19,.08); background:#121914; color:#d7ead8; padding:18px; font-family:"Cascadia Code","Consolas",monospace; font-size:12px; line-height:1.7; white-space:pre-wrap; }
+    @media (max-width:1080px) { .controls, .stage { grid-template-columns:1fr; } .video-shell, video { min-height:320px; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="hero">
+      <div class="hero-title">
+        <div>
+          <div class="tag">Custom Player</div>
+          <h1>双链路 WebRTC 拉流控制台</h1>
+        </div>
+        <div class="tag">方案1：启动时选择 LAN / WAN 配置</div>
+      </div>
+      <p>
+        当前页面不再做运行时局域网 / 公网硬切。请在启动程序时通过 <code>--lan-mode</code> 或 <code>--wan-mode</code> 选择对应配置文件，
+        页面只负责发起 WebRTC 播放协商，这样更符合 ZLMediaKit 的全局 RTC 配置方式，也更稳定。
+      </p>
+    </section>
+
+    <section class="controls">
+      <div class="panel">
+        <h2 class="section-title">链路与协商地址</h2>
+        <div class="field">
+          <label>视频链路</label>
+          <div class="switches" id="streamModes">
+            <button class="switch-btn active" data-stream="camera">摄像头链路</button>
+            <button class="switch-btn" data-stream="file">文件链路</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="apiBase">WebRTC API 基地址</label>
+          <input id="apiBase" value="" />
+        </div>
+        <div class="field">
+          <label for="apiUrl">当前协商地址</label>
+          <input id="apiUrl" readonly />
+        </div>
+        <div class="hint">
+          局域网测试时请先用 <code>--lan-mode</code> 启动程序，再通过设备局域网 IP 打开本页面；
+          公网测试时请用 <code>--wan-mode</code> 启动程序，并通过映射后的公网地址打开本页面。
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2 class="section-title">播放控制</h2>
+        <div class="action-row">
+          <button id="startBtn" class="primary-btn">开始播放</button>
+          <button id="stopBtn" class="danger-btn">停止</button>
+          <button id="audioBtn" class="secondary-btn toggle-btn">音频关闭</button>
+          <button id="clearLogBtn" class="secondary-btn">清空日志</button>
+        </div>
+        <div class="status-grid">
+          <div class="status-card"><span class="label">当前链路</span><span class="value" id="streamLabel">camera</span></div>
+          <div class="status-card"><span class="label">连接状态</span><span class="value" id="connState">idle</span></div>
+          <div class="status-card"><span class="label">音频轨道</span><span class="value" id="audioState">未请求</span></div>
+          <div class="status-card"><span class="label">当前模式</span><span class="value" id="modeLabel">未指定</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="stage">
+      <div class="video-shell">
+        <video id="video" autoplay playsinline controls muted></video>
+        <div class="video-overlay">
+          <div class="pill" id="overlayTag">camera · waiting</div>
+          <div class="pill">LAN/WAN 模式由程序启动参数决定</div>
+        </div>
+      </div>
+      <div class="side-box">
+        <div class="side-card">
+          <h3>推荐启动方式</h3>
+          <ul>
+            <li>局域网 / 热点联调：<code>./app --lan-mode</code></li>
+            <li>公网穿透测试：<code>./app --wan-mode</code></li>
+            <li>也可以显式指定：<code>./app --zlm-config ../config.lan.ini</code></li>
+          </ul>
+        </div>
+        <div class="side-card">
+          <h3>音频按钮当前语义</h3>
+          <ul>
+            <li>关闭：只请求视频，播放器保持静音</li>
+            <li>开启：请求音频，并尝试取消静音播放</li>
+            <li>如果后端没有音频轨，页面会提示“未收到音频轨”</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="log-panel">
+      <div class="log-head">
+        <h2 class="section-title">运行日志</h2>
+        <div class="hint">重点看页面打开方式和程序启动模式是否一致。</div>
+      </div>
+      <pre id="log"></pre>
+    </section>
+  </div>
+
+  <script>
+    const streamButtons = Array.from(document.querySelectorAll('[data-stream]'));
+    const apiBaseEl = document.getElementById('apiBase');
+    const apiUrlEl = document.getElementById('apiUrl');
+    const videoEl = document.getElementById('video');
+    const logEl = document.getElementById('log');
+    const streamLabelEl = document.getElementById('streamLabel');
+    const modeLabelEl = document.getElementById('modeLabel');
+    const connStateEl = document.getElementById('connState');
+    const audioStateEl = document.getElementById('audioState');
+    const overlayTagEl = document.getElementById('overlayTag');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const audioBtn = document.getElementById('audioBtn');
+    const clearLogBtn = document.getElementById('clearLogBtn');
+
+    const query = new URLSearchParams(window.location.search);
+    const currentApp = query.get('app') || 'live';
+    const launchMode = query.get('mode') || '由程序启动参数决定';
+
+    let currentStream = query.get('stream') || 'camera';
+    let requestAudio = false;
+    let pc = null;
+
+    function log(msg) {
+      const line = `${new Date().toLocaleTimeString()} ${msg}`;
+      logEl.textContent += `${line}\n`;
+      logEl.scrollTop = logEl.scrollHeight;
+      console.log(line);
+    }
+
+    function normalizeBase(value) { return value.trim().replace(/\/$/, ''); }
+
+    function updateApiUrl() {
+      const base = normalizeBase(apiBaseEl.value);
+      apiUrlEl.value = `${base}/index/api/webrtc?app=${encodeURIComponent(currentApp)}&stream=${encodeURIComponent(currentStream)}&type=play`;
+      streamLabelEl.textContent = currentStream;
+      modeLabelEl.textContent = launchMode;
+      overlayTagEl.textContent = `${currentStream} · ${connStateEl.textContent}`;
+      streamButtons.forEach((btn) => btn.classList.toggle('active', btn.dataset.stream === currentStream));
+    }
+
+    function updateAudioButton() {
+      audioBtn.textContent = requestAudio ? '音频开启' : '音频关闭';
+      audioBtn.classList.toggle('on', requestAudio);
+      videoEl.muted = !requestAudio;
+      if (!requestAudio) audioStateEl.textContent = '未请求';
+    }
+
+    function setConnectionState(text) {
+      connStateEl.textContent = text;
+      overlayTagEl.textContent = `${currentStream} · ${text}`;
+    }
+
+    function closePc() {
+      if (pc) {
+        pc.ontrack = null;
+        pc.onconnectionstatechange = null;
+        pc.oniceconnectionstatechange = null;
+        pc.close();
+        pc = null;
+      }
+      videoEl.srcObject = null;
+      setConnectionState('idle');
+    }
+
+    async function waitIceComplete(peer) {
+      if (peer.iceGatheringState === 'complete') return;
+      await new Promise((resolve) => {
+        const onState = () => {
+          if (peer.iceGatheringState === 'complete') {
+            peer.removeEventListener('icegatheringstatechange', onState);
+            resolve();
+          }
+        };
+        peer.addEventListener('icegatheringstatechange', onState);
+      });
+    }
+
+    streamButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        currentStream = btn.dataset.stream;
+        updateApiUrl();
+        log(`已切换链路: ${currentStream}`);
+      });
+    });
+
+    apiBaseEl.addEventListener('input', updateApiUrl);
+
+    audioBtn.addEventListener('click', async () => {
+      requestAudio = !requestAudio;
+      updateAudioButton();
+      log(requestAudio ? '已开启音频请求，下一次协商会尝试接收音频轨' : '已关闭音频请求，仅请求视频轨');
+      if (requestAudio && videoEl.srcObject) {
+        try { await videoEl.play(); } catch (err) { log(`浏览器阻止了自动出声，需要用户交互后再次播放: ${err.message || err}`); }
+      }
+    });
+
+    clearLogBtn.addEventListener('click', () => { logEl.textContent = ''; });
+
+    startBtn.addEventListener('click', async () => {
+      try {
+        closePc();
+        const api = apiUrlEl.value.trim();
+        if (!api) { log('错误: 协商地址为空'); return; }
+
+        audioStateEl.textContent = requestAudio ? '等待音频轨' : '未请求';
+        setConnectionState('starting');
+        log(`开始协商: ${api}`);
+
+        pc = new RTCPeerConnection({ iceServers: [] });
+        pc.addTransceiver('video', { direction: 'recvonly' });
+        if (requestAudio) pc.addTransceiver('audio', { direction: 'recvonly' });
+
+        const remoteStream = new MediaStream();
+        let hasAudioTrack = false;
+
+        pc.ontrack = async (event) => {
+          remoteStream.addTrack(event.track);
+          videoEl.srcObject = remoteStream;
+          if (event.track.kind === 'audio') {
+            hasAudioTrack = true;
+            audioStateEl.textContent = requestAudio ? '已收到音频轨' : '收到音频轨(未请求预期外)';
+          } else if (event.track.kind === 'video' && requestAudio && !hasAudioTrack) {
+            audioStateEl.textContent = '未收到音频轨';
+          }
+          log(`收到远端轨道: ${event.track.kind}`);
+          try { await videoEl.play(); } catch (err) { log(`video.play() 被浏览器拦截: ${err.message || err}`); }
+        };
+
+        pc.onconnectionstatechange = () => { setConnectionState(pc.connectionState || 'unknown'); log(`连接状态: ${pc.connectionState}`); };
+        pc.oniceconnectionstatechange = () => { log(`ICE 状态: ${pc.iceConnectionState}`); };
+
+        const offer = await pc.createOffer({ offerToReceiveVideo: true, offerToReceiveAudio: requestAudio });
+        await pc.setLocalDescription(offer);
+        await waitIceComplete(pc);
+        log('本地 offer 已生成，开始请求 answer');
+
+        const response = await fetch(api, { method: 'POST', headers: { 'Content-Type': 'application/sdp' }, body: pc.localDescription.sdp });
+        const rawText = await response.text();
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${rawText || response.statusText}`);
+        }
+        let data;
+        try {
+          data = JSON.parse(rawText);
+        } catch (parseErr) {
+          throw new Error(`answer 不是有效 JSON: ${rawText.slice(0, 240)}`);
+        }
+        if (data.code !== 0 || !data.sdp) throw new Error(`协商失败: ${JSON.stringify(data)}`);
+
+        await pc.setRemoteDescription({ type: 'answer', sdp: data.sdp });
+        setConnectionState('answer-set');
+        log('远端 answer 设置成功');
+
+        if (requestAudio) {
+          setTimeout(() => {
+            if (!hasAudioTrack && pc) {
+              audioStateEl.textContent = '未收到音频轨';
+              log('当前协商成功，但后端尚未提供音频轨');
+            }
+          }, 1500);
+        }
+      } catch (err) {
+        setConnectionState('failed');
+        log(`失败: ${err && err.message ? err.message : err}`);
+      }
+    });
+
+    stopBtn.addEventListener('click', () => { closePc(); log('已停止播放'); });
+
+    const defaultBase = query.get('base') || ((window.location.origin && window.location.origin !== 'null') ? window.location.origin : 'http://127.0.0.1:8000');
+    apiBaseEl.value = defaultBase;
+    updateApiUrl();
+    updateAudioButton();
+    log(`页面初始化完成，当前基地址=${defaultBase}，当前模式说明=${launchMode}`);
+  </script>
+</body>
+</html>

@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>NetCameraPage</class>
+ <widget class="QWidget" name="NetCameraPage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1024</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">/* === 1. 全局基础设置 === */
+QWidget {
+    background-color: #1E1E24; /* 深蓝灰背景 */
+    color: #E0E6ED;            /* 浅色文字 */
+    font-family: &quot;Microsoft YaHei&quot;, &quot;Segoe UI&quot;;
+    font-size: 14px;
+}
+
+/* === 2. 顶部 &amp; 底部栏 (容器背景色) === */
+QFrame#frameTop, QFrame#frameBottom {
+    background-color: #2B2D42; /* 稍微亮一点的深色，区分层次 */
+    border: none;
+}
+QFrame#frameTop {
+    border-bottom: 1px solid #3E4C59;
+}
+QFrame#frameBottom {
+    border-top: 1px solid #3E4C59;
+}
+
+/* === 3. 【核心修改】输入框 (白底黑字) === */
+QLineEdit {
+    background-color: #FFFFFF;  /* 纯白背景 */
+    color: #333333;             /* 深灰文字 (在白底上必须用深色字才看得清) */
+    border: 1px solid #888888;  /* 灰色边框 */
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-weight: bold;
+}
+QLineEdit:focus {
+    border: 2px solid #007AFF;  /* 选中时边框变蓝 */
+}
+
+/* === 4. 【核心修改】普通标签 (透明背景) === */
+/* 注意：这里不包含 objectName 为 lblDisplay 的控件 */
+QLabel {
+    background-color: transparent; /* 去掉背景色 */
+    border: none;                  /* 去掉边框 */
+    color: #DDDDDD;                /* 文字颜色 */
+	font-size: 20px;
+}
+
+/* === 5. 特例：视频显示区 (必须是黑底) === */
+/* 使用 ID 选择器 #lblDisplay 覆盖上面的通用设置 */
+QLabel#lblDisplay {
+    background-color: #000000;
+    border: 2px solid #3A405A;
+    border-radius: 8px;
+    color: #666; /* &quot;NO SIGNAL&quot; 的颜色 */
+}
+
+/* === 6. 按钮样式 === */
+QPushButton {
+    background-color: #454E5F;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 15px;
+    color: white;
+    font-weight: 600;
+
+	text-align: center;
+}
+QPushButton:hover {
+    background-color: #566275;
+}
+QPushButton:pressed {
+    background-color: #2E3440;
+    padding-top: 7px; /* 按下微动效果 */
+}
+
+/* 连接按钮 (蓝) */
+QPushButton#btnConnect {
+    background-color: #007AFF;
+	font-size: 16px;
+}
+QPushButton#btnConnect:hover {
+    background-color: #0062CC;
+	font-size: 16px;
+}
+
+/* 断开按钮 (红) */
+QPushButton#btnDisconnect {
+    background-color: #FF3B30;
+	font-size: 16px;
+}
+QPushButton#btnDisconnect:hover {
+    background-color: #D32F2F;
+	font-size: 16px;
+}</string>
+  </property>
+  <widget class="QFrame" name="frameTop">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1024</width>
+     <height>91</height>
+    </rect>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::StyledPanel</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Raised</enum>
+   </property>
+   <widget class="QPushButton" name="btnConnect">
+    <property name="geometry">
+     <rect>
+      <x>650</x>
+      <y>20</y>
+      <width>121</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Microsoft YaHei</family>
+      <pointsize>-1</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+      <underline>false</underline>
+     </font>
+    </property>
+    <property name="text">
+     <string>Connect</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="edtAddress">
+    <property name="geometry">
+     <rect>
+      <x>330</x>
+      <y>25</y>
+      <width>201</width>
+      <height>41</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnDisconnect">
+    <property name="geometry">
+     <rect>
+      <x>840</x>
+      <y>20</y>
+      <width>121</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Microsoft YaHei</family>
+      <pointsize>-1</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">/* === 断开按钮 (红色) === */
+QPushButton#btnDisconnect {
+    background-color: #FF3B30; /* 正常状态：红 */
+    border: 1px solid #FF3B30;
+}
+
+/* 🖱️ 悬停状态 (发光/变亮) */
+QPushButton#btnDisconnect:hover {
+    background-color: #FF6666; /* 🚨 改亮一点，这就是你要的发光感 */
+    border: 1px solid #FF8888; /* 边框也跟着亮 */
+}
+
+/* 🚫 禁用状态 (关键修复！) */
+/* 只有当它被禁用时，强制变灰，防止误解 */
+QPushButton#btnDisconnect:disabled {
+    background-color: #333333; /* 深灰 */
+    border: 1px solid #555555;
+    color: #777777;
+}</string>
+    </property>
+    <property name="text">
+     <string>Disconnect</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>210</x>
+      <y>22</y>
+      <width>101</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Address:</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnBack">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>20</y>
+      <width>121</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Microsoft YaHei</family>
+      <pointsize>-1</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">/* === 单独修改 Back 按钮 === */
+QPushButton#btnBack {
+    font-size: 18px; /* 这里填你想要的数字，比如改小一点 */
+    font-weight: normal; /* 如果不想加粗，可以设为 normal */
+    
+}</string>
+    </property>
+    <property name="text">
+     <string>Back up</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QFrame" name="frameBottom">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>559</y>
+     <width>1024</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::StyledPanel</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Raised</enum>
+   </property>
+   <widget class="QLabel" name="lblStatus">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>2</y>
+      <width>1004</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Status: stopped</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QLabel" name="lblDisplay">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>90</y>
+     <width>1024</width>
+     <height>471</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
